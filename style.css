@@ -1,0 +1,85 @@
+body {
+    background-color: white;
+}
+h1 {
+    color: red 
+}
+#start-screen {
+    width: 100%;
+    height: 100VH;
+}
+.start-game {
+    background-color: orange;
+    color: white;
+    padding: 10px;
+    margin: 50px auto;
+    display: flex;
+    cursor: pointer;
+}
+.title {
+    text-align: center;
+}
+
+#game-screen {
+    width: 100%;
+    height: 100VH;
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.game-area {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.message-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
+#bot-container .water-table tr td.WATER,
+#bot-container .water-table tr td.SHIP {
+    cursor: pointer;
+}
+
+.water-table tr td {
+    width: 30px;
+    height: 30px;
+    border: 2px solid;
+}
+
+.water-table tr td.WATER,
+.water-table tr td.SHIP {
+    background-color: skyblue;
+}
+
+.water-table tr td.WATER_HIT {
+    background-color: skyblue;
+    cursor: not-allowed;
+    /* pointer-events: none; */
+}
+.water-table tr td.WATER_HIT::after {
+    content: 'x';
+    font-size: 25px;
+    color: black;
+    text-align: center;
+    display: block;
+}
+
+.water-table tr td.SHIP_HIT {
+    background-color: coral;
+    cursor: not-allowed;
+    /* pointer-events: none; */
+}
+
+.water-table tr td.SHIP_HIT::after {
+    content: "\2713";
+    font-size: 25px;
+    color: black;
+    text-align: center;
+    display: block;
+}
