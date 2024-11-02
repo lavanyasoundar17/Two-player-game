@@ -51,9 +51,8 @@ function parseCoordinate(coord) {
   };
 }
 
-// place ship
+// place ship on grid
 function placeShipsOnGrid(ships, coordinates, playerType) {
-  // const gridSize = Math.sqrt(coordinates.length);
   const grid = Array.from({ length: x_axis.length }, () =>
     Array(y_axis.length).fill(WaterBlockStatus.WATER)
   );
@@ -162,6 +161,21 @@ function createGameGrid(grid, playerType) {
   return table;
 }
 
+function decideWhoStarts() {
+  gameTurn =
+    Math.random() < 0.5 ? playerIdentifier.PLAYER : playerIdentifier.BOT;
+  gameState = gameStateIdentifier.PLAYING;
+
+  gameTurn === playerIdentifier.PLAYER
+    ? setMessage("You are starting the game")
+    : setMessage("Bot is starting the game");
+  if (gameTurn === playerIdentifier.BOT) {
+    setTimeout(() => {
+      askBotToShoot();
+    }, 1000);
+  }
+}
+
 function playerShootListner(cell) {
   if (
     gameState === gameStateIdentifier.OVER ||
@@ -196,51 +210,6 @@ function playerShootListner(cell) {
   }
 }
 
-function removeShipCoord(coord, playerType) {
-  playerType === "player"
-    ? (botGridShipCoordinates = botGridShipCoordinates.filter(
-        (c) => c !== coord
-      ))
-    : (playerGridShipCoordinates = playerGridShipCoordinates.filter(
-        (c) => c !== coord
-      ));
-}
-
-function checkWinCondition(playerType) {
-  if (playerType === "player") {
-    if (botGridShipCoordinates.length === 0) {
-      setMessage("You won!");
-      // break game loop
-      gameState = gameStateIdentifier.OVER;
-      return true;
-    }
-    return false;
-  }
-  if (playerType === "bot") {
-    if (playerGridShipCoordinates.length === 0) {
-      setMessage("Bot won!");
-      // break game loop
-      gameState = gameStateIdentifier.OVER;
-      return true;
-    }
-    return false;
-  }
-}
-
-function decideWhoStarts() {
-  gameTurn =
-    Math.random() < 0.5 ? playerIdentifier.PLAYER : playerIdentifier.BOT;
-  gameState = gameStateIdentifier.PLAYING;
-
-  gameTurn === playerIdentifier.PLAYER
-    ? setMessage("You are starting the game")
-    : setMessage("Bot is starting the game");
-  if (gameTurn === playerIdentifier.BOT) {
-    setTimeout(() => {
-      askBotToShoot();
-    }, 1000);
-  }
-}
 function askBotToShoot() {
   setMessage("Bot's turn");
   if (
@@ -267,45 +236,77 @@ function askBotToShoot() {
     playerGrid[row][col] === WaterBlockStatus.WATER_HIT ||
     playerGrid[row][col] === WaterBlockStatus.SHIP_HIT
   ) {
-    removeCoordinateFired(row, col);
+    removeBotCoordinateFired(row, col);
     setTimeout(() => {
       askBotToShoot();
     }, 1000);
   } else if (playerGrid[row][col] === WaterBlockStatus.WATER) {
-    const shortFiredElement = getFiredCell(row, col);
+    const shortFiredElement = getBotFiredCell(row, col);
     playerGrid[row][col] = WaterBlockStatus.WATER_HIT;
     setCellToWaterHit(shortFiredElement);
-    removeCoordinateFired(row, col);
+    removeBotCoordinateFired(row, col);
 
     gameTurn = playerIdentifier.PLAYER;
     setMessage("Your turn");
   } else if (playerGrid[row][col] === WaterBlockStatus.SHIP) {
-    const shortFiredElement = getFiredCell(row, col);
+    const shortFiredElement = getBotFiredCell(row, col);
     playerGrid[row][col] = WaterBlockStatus.SHIP_HIT;
     setCellToShipHit(shortFiredElement);
     removeShipCoord(`${bot_picking_coordinates[randomIndex][0]}${col}`, "bot");
-    removeCoordinateFired(row, col);
+    removeBotCoordinateFired(row, col);
     if (!checkWinCondition(playerIdentifier.BOT)) {
       setTimeout(() => {
         askBotToShoot();
       }, 1000);
     }
-    // constructNextPossibleSlots(row, col);
   }
 }
 
-function removeCoordinateFired(row, col) {
-  console.log(
-    `${convertNumericIndexToAlphabetIndex(row)}${col}`,
-    "element to remove"
-  );
+function removeShipCoord(coord, playerType) {
+  playerType === "player"
+    ? (botGridShipCoordinates = botGridShipCoordinates.filter(
+        (c) => c !== coord
+      ))
+    : (playerGridShipCoordinates = playerGridShipCoordinates.filter(
+        (c) => c !== coord
+      ));
+}
+
+function checkWinCondition(playerType) {
+  if (playerType === "player") {
+    if (botGridShipCoordinates.length === 0) {
+      setMessage("You won!");
+      // break game loop
+      gameState = gameStateIdentifier.OVER;
+      setTimeout(() => {
+        location.reload();
+      }, 2000);
+      return true;
+    }
+    return false;
+  }
+  if (playerType === "bot") {
+    if (playerGridShipCoordinates.length === 0) {
+      setMessage("Bot won!");
+      // break game loop
+      gameState = gameStateIdentifier.OVER;
+
+      setTimeout(() => {
+        location.reload();
+      }, 2000);
+      return true;
+    }
+    return false;
+  }
+}
+
+function removeBotCoordinateFired(row, col) {
   bot_picking_coordinates = bot_picking_coordinates.filter(
     (val) => val != `${convertNumericIndexToAlphabetIndex(row)}${col}`
   );
-  console.log(bot_picking_coordinates, "pending coordinates bot");
 }
 
-function getFiredCell(row, col) {
+function getBotFiredCell(row, col) {
   return document.getElementById("player-table")?.childNodes[row]?.childNodes[
     col
   ];
