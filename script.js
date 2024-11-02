@@ -13,28 +13,43 @@ const WaterBlockStatus = Object.freeze({
   var playerGrid, botGrid;
   var playerGridShipCoordinates = []; 
   var botGridShipCoordinates = [];
-  
+
+// game state
+const gameStateIdentifier = Object.freeze({
+    YET_TO_START: 'yet_to_start',
+    PLAYING: 'playing',
+    OVER: 'over',
+});
+const playerIdentifier = Object.freeze({
+    PLAYER: 'player',
+    BOT: 'bot',
+    NONE: 'none'
+});
+
+let gameTurn = playerIdentifier.NONE;
+let gameState = gameStateIdentifier.YET_TO_START;
   
 // map the 2D array with the html table
 // flatmap -> map + flat
   const coordinate_mapping = x_axis.flatMap(x => y_axis.map(y => `${x}${y}`));
   
+//util functions
 // convert alphabet index to numeric index
 convertAlphabetIndexToNumericIndex = (letter) => letter.charCodeAt(0) - 'a'.charCodeAt(0);
 
 convertNumericIndexToAlphabetIndex = (number) => String.fromCharCode(number + 'a'.charCodeAt(0));
 
+function parseCoordinate(coord) {
+    return {
+      row: convertAlphabetIndexToNumericIndex(coord[0]), // Convert 'a' to 0, 'b' to 1, etc.
+      col: parseInt(coord[1], 10) - 1 // Convert '1' to 0, '2' to 1, etc.
+    };
+  }
+
 // place ship
   function placeShipsOnGrid(ships, coordinates, playerType) {
     const gridSize = Math.sqrt(coordinates.length);
     const grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(WaterBlockStatus.WATER));
-  
-    function parseCoordinate(coord) {
-      return {
-        row: convertAlphabetIndexToNumericIndex(coord[0]), // Convert 'a' to 0, 'b' to 1, etc.
-        col: parseInt(coord[1], 10) - 1 // Convert '1' to 0, '2' to 1, etc.
-      };
-    }
   
     function canPlaceShip(row, col, length, direction) {
       if (direction === 'horizontal') {
@@ -100,6 +115,8 @@ convertNumericIndexToAlphabetIndex = (number) => String.fromCharCode(number + 'a
       
       document.getElementById('start-screen').style.display = 'none';
       document.getElementById('game-screen').style.display = 'flex';
+
+      decideWhoStarts();
   }
 
   function createGameGrid(grid, playerType) {
@@ -115,7 +132,7 @@ convertNumericIndexToAlphabetIndex = (number) => String.fromCharCode(number + 'a
             cell.setAttribute('data-y', `${y}`);
             cell.setAttribute('value', grid[xIndex][yIndex]);
             cell.classList.add(grid[xIndex][yIndex])
-            if(playerType === 'bot') cell.addEventListener('click', () => clickWaterBlock(cell));
+            if(playerType === 'bot') cell.addEventListener('click', () => playerShootListner(cell));
             row.appendChild(cell);
         });
         table.appendChild(row);
@@ -123,7 +140,7 @@ convertNumericIndexToAlphabetIndex = (number) => String.fromCharCode(number + 'a
     return table;
   }
 
-  function clickWaterBlock(cell) {
+  function playerShootListner(cell) {
     const coord = cell.getAttribute('data-coord');
     const x = cell.getAttribute('data-x');
     const y = cell.getAttribute('data-y');
@@ -135,6 +152,9 @@ convertNumericIndexToAlphabetIndex = (number) => String.fromCharCode(number + 'a
       cell.setAttribute('value', WaterBlockStatus.WATER_HIT);
       botGrid[convertAlphabetIndexToNumericIndex(x)][y-1] = WaterBlockStatus.WATER_HIT;
       document.getElementById('message-container').textContent = `Missed at ${coord}`;
+
+      gameTurn = playerIdentifier.BOT;
+      askBotToShoot();
     } else if (value === WaterBlockStatus.SHIP) {
       cell.classList.remove(WaterBlockStatus.SHIP);
       cell.classList.add(WaterBlockStatus.SHIP_HIT);
@@ -143,11 +163,9 @@ convertNumericIndexToAlphabetIndex = (number) => String.fromCharCode(number + 'a
       removeShipCoord(`${x}${y-1}`, 'player');
       document.getElementById('message-container').textContent = `Hit at ${coord}`;
       checkWinCondition('player');
-      console.log(botGridShipCoordinates);
     } else {
       document.getElementById('message-container').textContent = `Already hit at ${coord}`;
     }
-    console.log(botGrid);
   }
 
   function removeShipCoord(coord, playerType) {
@@ -159,12 +177,43 @@ convertNumericIndexToAlphabetIndex = (number) => String.fromCharCode(number + 'a
         if(botGridShipCoordinates.length === 0) {
             document.getElementById('message-container').textContent = 'You won!';
             // break game loop
+            gameState = gameStateIdentifier.OVER;
+            return;
         }
+
+        gameTurn = playerIdentifier.BOT;
+        askBotToShoot();
     }
     if(playerType === 'bot') { 
         if(playerGridShipCoordinates.length === 0) {
             document.getElementById('message-container').textContent = 'Bot won!';
             // break game loop
+            gameState = gameStateIdentifier.OVER;
         }
+    }
+  }
+
+  function decideWhoStarts() {
+    gameTurn = Math.random() < 0.5 ? playerIdentifier.PLAYER : playerIdentifier.BOT;
+    gameState = gameStateIdentifier.PLAYING;
+    document.getElementById('message-container').textContent = `${gameTurn === playerIdentifier.PLAYER ? 'You are starting the game' : 'Bot is starting the game'}`;
+    if(gameTurn === playerIdentifier.BOT) {
+        askBotToShoot();
+    }
+  }
+
+  function askBotToShoot(isSubsequent = false, previousCoord = '') {
+    if(gameState === gameStateIdentifier.OVER) return;
+    if(!isSubsequent) {
+        const randomIndex = Math.floor(Math.random() * coordinate_mapping.length);
+        const { row, col } = parseCoordinate(coordinate_mapping[randomIndex]);
+        console.log('Bot shoots at:', `${convertNumericIndexToAlphabetIndex(row)}${col}`);
+        // const x = convertAlphabetIndexToNumericIndex(coord[0]);
+        // const y = parseInt(coord[1], 10) + 1;
+        // const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+        // if(cell) {
+        //     cell.click();
+        //     askBotToShoot(true, coord);
+        // }
     }
   }
