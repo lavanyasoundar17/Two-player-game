@@ -193,6 +193,7 @@ function playerShootListner(cell) {
       WaterBlockStatus.WATER_HIT;
 
     gameTurn = playerIdentifier.BOT;
+    setMessage("Bot's turn");
     setTimeout(() => {
       askBotToShoot();
     }, 1000);
