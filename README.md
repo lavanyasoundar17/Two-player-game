@@ -11,6 +11,7 @@ Simple Controls: Easy to pick up and play.
 
 How to Play 🎯
 
+Open the game in your browser.
 Setup: Ships are automatically placed on both grids at the start.
 Turn-Based Gameplay:
 Click on a cell in the bot’s grid to attack.
