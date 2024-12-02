@@ -21,5 +21,9 @@ Future Enhancements 🔮
 Add difficulty levels for the bot.
 Multiplayer mode for player-vs-player action.
 Animations and sound effects for attacks.
+
 License 📄
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License.
+
+Acknowledgments 🙌
+Inspired by the classic Battleship board game.
